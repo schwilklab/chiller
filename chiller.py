@@ -46,7 +46,7 @@ def read_program(fname):
             chiller_logger.warning("Bad or empty line in program file: %s" % l)
     return (pname, times, temps)
 
-        
+
 class Chiller:
     def __init__(self, ser, interval):
         self.ser = ser
@@ -63,20 +63,20 @@ class Chiller:
         else :
             chiller_logger.info("VALUE RECEIVED: %s" % s)
         return (s)
-            
+
     def write_value(self, par, val):
         self.ser.write("S%s %s\r" % (par, val))
         s = self.ser.readline()[:-1]
         if s[0:2] == "OK" :
             chiller_logger.info("WRITE SUCCESSFUL: %s %s" % (par,val))
         else : #if s[0] == "$" :
-           chiller_logger.warning("WRITE FAILURE: %s %s, %s" % (par,val, s))
+            chiller_logger.warning("WRITE FAILURE: %s %s, %s" % (par,val, s))
         return(s)
 
     def set_temp(self, temp):
-       r = self.write_value("S", str(temp))
-       #chiller_logger.info("set temp response: " + r)
-       return
+        r = self.write_value("S", str(temp))
+        #chiller_logger.info("set temp response: " + r)
+        return
 
     def read_temp(self):
         t = self.read_value("T")
@@ -84,7 +84,7 @@ class Chiller:
             return(float(t[0:-1]))
         except:
             return(t)
-    
+
     def on(self):
         r = self.write_value("O", "1")
         return(r)
@@ -111,14 +111,14 @@ class Chiller:
             self.write_value("RS" , "%d %0.2f %d" % (i, temps[i], times[i]))
         return
 
-                                
+
 
     def run_program(self, times, temps):
         info_logger.info("Running Program. Interval: " + str(INTERVAL))
         self.set_ramp(1, times, temps)
         self.on()
         self.bring_to_temp(temps[0])
-        
+
         self.write_value("RO", "S")
         while(True):
             info_logger.info("Temp:\t" + str(self.read_temp()))
@@ -128,49 +128,45 @@ class Chiller:
         info_logger.info("Program finished")
         return
 
-    
-  
+
 def main():
-	"""Command-line tool.  See chiller.py -h for help.
-	"""
+    """Command-line tool.  See chiller.py -h for help.
+    """
 
-	#set default input and output
-	input = sys.stdin
-	output = sys.stdout
-	
-	from optparse import OptionParser
-	
-	usage = """
-	usage: %prog [options]
-	"""
+    #set default input and output
+    input = sys.stdin
+    output = sys.stdout
 
-	parser = OptionParser(usage=usage, version ="%prog " + __version__)
-	# parser.add_option("-v", "--verbose", action="store_true", dest="verbose", default=False,
-	# 				  help="Print INFO messages to stdout, default=%default")
-	parser.add_option("-i", "--interval", type="int", dest="interval", default=INTERVAL,
-					  help="Set update interval in seconds, default=%default")
-	parser.add_option("-f", "--progfile", type="str", dest="progfile", default=PROG_FILE,
-					  help="Set program file, default=%default")
-                                          
-	(options, args) = parser.parse_args()
+    from optparse import OptionParser
 
+    usage = """
+    usage: %prog [options]
+    """
 
-        ser = serial.Serial(comport, baud, timeout=1)
-        chil = Chiller(ser, interval = options.interval)
- 
-        chiller_logger.info("Program started")
-        # start by turning everything off:
-        chil.write_value("RO", "E")
-        chil.off()
-        
+    parser = OptionParser(usage=usage, version ="%prog " + __version__)
+    # parser.add_option("-v", "--verbose", action="store_true", dest="verbose", default=False,
+    #                                 help="Print INFO messages to stdout, default=%default")
+    parser.add_option("-i", "--interval", type="int", dest="interval", default=INTERVAL,
+                                      help="Set update interval in seconds, default=%default")
+    parser.add_option("-f", "--progfile", type="str", dest="progfile", default=PROG_FILE,
+                                      help="Set program file, default=%default")
 
-        pname, times, temps = read_program(options.progfile)
-        info_logger.info("Running Program: " + pname)
-        chil.run_program(times, temps)
-            
-        chiller_logger.info("Program ended")
+    (options, args) = parser.parse_args()
+
+    ser = serial.Serial(comport, baud, timeout=1)
+    chil = Chiller(ser, interval = options.interval)
+
+    chiller_logger.info("Program started")
+    # start by turning everything off:
+    chil.write_value("RO", "E")
+    chil.off()
+
+    pname, times, temps = read_program(options.progfile)
+    info_logger.info("Running Program: " + pname)
+    chil.run_program(times, temps)
+
+    chiller_logger.info("Program ended")
 
 if __name__=="__main__":
 
-   main()
-    
+    main()
